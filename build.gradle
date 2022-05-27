@@ -1,0 +1,115 @@
+plugins {
+	id 'java'
+	id 'checkstyle'
+	id 'com.github.spotbugs' version '4.5.0'
+	id 'name.remal.sonarlint' version '1.5.0'
+	//id 'pmd'
+}
+
+sourceCompatibility = '11'
+targetCompatibility = '11'
+
+repositories {
+	mavenCentral()
+}
+
+//dependencies {
+//	testImplementation('org.junit.jupiter:junit-jupiter:5.6.0') // JUnit
+//}
+// ##############################################################################
+// Checkstyle configuration
+checkstyle {
+	toolVersion '9.0.1'
+	maxWarnings = 0
+	//ignoreFailures = true
+	reportsDir = project.file("build/reports/checkstyle")
+}
+
+checkstyleMain {
+	source ='src/main/java'
+}
+
+checkstyleTest {
+	source ='src/test/java'
+}
+
+tasks.withType(Checkstyle) {
+	reports {
+		xml.required = false
+		html.required = true
+	}
+}
+// ##############################################################################
+// Spotbugs configuration
+spotbugs {
+	//ignoreFailures = true
+	effort = "max"
+	reportLevel = "low"
+	reportsDir = project.file("build/reports/spotbugs")
+}
+
+tasks.matching {task -> task.name.startsWith('spotbugs')}.forEach {
+	it.reports {
+		html.required = true
+		xml.required = false // spotbugs does not allow to generate a xml and html report at once
+	}
+}
+// ##############################################################################
+// Sonarlint configuration
+sonarlint {
+	//ignoreFailures = true
+	reportsDir = project.file("build/reports/sonarlint")
+	// workingDir 'src/main/java'
+}
+
+// Example to configure HTML report
+sonarlintMain {
+  reports {
+    findBugsXml.required = false // default false
+    html {
+      required = true // default false
+      // default location build/reports/sonarlint/sonarlintMain.html
+    }
+  }
+}
+// ##############################################################################
+// JavaDoc and Java configuration
+allprojects {
+    // Makes the "javadoc" action run without a ton of warnings.
+    tasks.withType(Javadoc) {
+        options.encoding = 'UTF-8'
+        destinationDir = file("${buildDir}/docs/testjavadoc")
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+    
+    tasks.withType(JavaCompile) {
+        options.fork = true
+        options.incremental = true
+        options.encoding = "UTF-8"
+        // possibly needed for ErrorProne? "-XDcompilePolicy=byfile"
+        options.compilerArgs << "-Xlint:all" << "-Xlint:-serial" << "-Xlint:-processing"
+    }
+}
+// ##############################################################################
+// JUnit configuration
+//test {
+//	useJUnitPlatform()
+//	testLogging {
+//		events "passed", "skipped", "failed"
+//	}
+//	reports {
+//		junitXml.required  = true
+//		html.required  = true
+//	}
+//}
+// ##############################################################################
+// PMD configuration
+//pmd {
+//    consoleOutput = true
+//    toolVersion = "6.44.0"
+//    rulesMinimumPriority = 5
+//    ignoreFailures = true
+//    reportsDir = project.file("build/reports/pmd")
+//    ruleSetFiles = files("config/pmd/ruleset.xml")
+//    ruleSets = []
+//}
